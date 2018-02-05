@@ -2,6 +2,7 @@
 
 import socket
 import argparse
+import time
 from struct import pack 
 
 HOST, PORT = "localhost", 9999
@@ -26,6 +27,7 @@ def main():
         default='Rocky.jpg')
 
     args = parser.parse_args()
+    start = time.time()
 
     # Create a socket (SOCK_STREAM means a TCP socket)
     sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -50,6 +52,7 @@ def main():
         data = []
         received = sock.recv(1024)
         print("Received: {}".format(received))
+        print("Total RTT: {} [s]".format(time.time() - start))
     finally:
         sock.close()
 

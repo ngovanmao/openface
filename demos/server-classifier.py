@@ -238,8 +238,9 @@ class MyTCPHandler(SocketServer.BaseRequestHandler):
         fp.write(data)
         fp.close()
         r = infer([fname])
-        print(str(r))
-        self.request.sendall(str(r) + '\n' )
+        str_r = str(i) + ' ' + str(r)
+        print(str_r)
+        self.request.sendall(str_r + '\n' )
         print("OK ")
 
 
