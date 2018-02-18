@@ -22,6 +22,9 @@
 # limitations under the License.
 
 import time
+import socket
+import SocketServer
+from threading import Thread
 
 start = time.time()
 
@@ -33,7 +36,6 @@ import sys
 
 from operator import itemgetter
 
-import SocketServer
 from struct import unpack
 
 import numpy as np
@@ -214,6 +216,33 @@ def infer(imgs):
     return results
 
 i = 0
+
+def client_thread(conn, ip, port):
+    global i
+    print("open a new connection from {}:{}".format(ip, str(port)))
+    while True:
+        img_size = conn.recv(8)
+        print("img_size = {}".format(str(img_size)))
+        if img_size == '': break
+        (length,) = unpack('>Q', img_size)
+        i += 1
+        fname = str(i) + '.jpg'
+        fp = open(fname, 'wb')
+        data = b''
+        while len(data) < length:
+            to_read = length - len(data)
+            data += conn.recv(
+                4096 if to_read > 4096 else to_read)
+        fp.write(data)
+        fp.close()
+        r = infer([fname])
+        str_r = str(i) + ' ' + str(r)
+        print(str_r)
+        conn.send(str_r + '\n' )
+        print("OK ")
+    conn.close()
+            
+
 class MyTCPHandler(SocketServer.BaseRequestHandler):
 
     """
@@ -304,6 +333,18 @@ Use `--networkModel` to set a non-standard Torch network model.""")
         start = time.time()
 
     HOST, PORT = "", 9999
-    server = SocketServer.TCPServer((HOST, PORT), MyTCPHandler)
-    server.serve_forever()
-
+    #server = SocketServer.TCPServer((HOST, PORT), MyTCPHandler)
+    #server = SocketServer.TCPServer((HOST, PORT), MyStreamTCPHandler)
+    #server = CustomServer((HOST, PORT), MyStreamTCPHandler)
+    #try:
+    #    server.serve_forever()
+    #except KeyboardInterrupt:
+    #    sys.exit(0)
+    server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    server.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+    server.bind((HOST, PORT))
+    server.listen(4)
+    while True:
+        print("Multithreaded Python server: waiting for connections from TCP clients...")
+        (conn, (ip, port)) = server.accept()
+        Thread(target=client_thread, args=(conn, ip, port)).start()
