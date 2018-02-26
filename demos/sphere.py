@@ -276,7 +276,7 @@ if __name__ == '__main__':
         beta = 1. - alpha
         cv2.putText(sphere, "CMU OpenFace", (50, 30),
                     cv2.FONT_HERSHEY_COMPLEX_SMALL, 2.,
-                    (0, 0, 0), 1, cv2.cv.CV_AA)
+                    (0, 0, 0), 1, cv2.LINE_AA)
         cv2.addWeighted(frame, alpha, sphere, beta, 0.0, frame)
         cv2.imshow('video', frame)
 
